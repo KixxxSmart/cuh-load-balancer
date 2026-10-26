@@ -1,0 +1,59 @@
+/**
+ * @mainpage CUH - Cloud Utility Hub
+ *
+ * @section overview Overview
+ * CUH simulates incoming requests, a FIFO queue, and a changing pool of web
+ * servers. Requests carry input/output IPs, a service duration, and a P/S job
+ * type. The program sends no real network traffic.
+ *
+ * @section design Design
+ * cuh::LoadBalancer owns its queue, clock, and servers.
+ * cuh::WebServer processes one cuh::Request by counting down its remaining
+ * cycles. cuh::Config loads settings, cuh::Firewall checks source-IP ranges,
+ * and cuh::Logger writes events and summaries.
+ *
+ * Each cycle admits new requests, advances existing work, assigns queued work,
+ * then checks capacity. New assignments start processing next cycle. More than
+ * 80 waiting requests per active server adds one server; fewer than 50 retires
+ * one while keeping at least one active. A retiring server finishes its work
+ * before deletion. A cooldown separates capacity changes.
+ *
+ * @section usage Build and run
+ * @code{.sh}
+ * make
+ * ./build/cuh
+ * make docs
+ * @endcode
+ * Enter starting servers and run duration when prompted. For the required run,
+ * enter 20 and 100000. Edit config/default.conf to select quiet or verbose mode
+ * and adjust traffic, task times, cooldown, blocked ranges, and log path.
+ *
+ * @section output Logs
+ * Quiet mode writes starting and ending summaries. Verbose mode also records
+ * arrivals, assignments, completions, blocked requests, and server changes.
+ * Summaries report queues, task-time range, work totals, and server status.
+ * Accepted requests equal completed plus queued plus in-flight requests.
+ * Generated requests equal accepted plus blocked requests, including seeding.
+ * The run stops at its selected duration; unfinished requests remain counted.
+ *
+ * @section bonus Bonus routing
+ * bonus_mode=true enables cuh::Switch, which sends P jobs to a processing
+ * balancer and S jobs to a streaming balancer. Each owns a separate queue,
+ * server pool, cooldown, and statistics. Both advance once per Switch cycle
+ * in a single-threaded simulation of concurrent work.
+ *
+ * Starting servers means total capacity across both pools: 20 starts with 10
+ * processing and 10 streaming servers. An odd total gives the processing pool
+ * the extra server. Bonus mode requires at least two starting servers and
+ * preserves at least one active server per pool. Each initial queue has 100
+ * requests per server with that pool's job type. New traffic is generated once
+ * and routed by type; each balancer applies the firewall before admission.
+ *
+ * Logs identify the pool for every event. Summaries report each pool separately
+ * and then combined totals. Queue peaks are reported per pool, not summed into
+ * a misleading combined peak. Request IDs are scoped by pool; new routed IDs
+ * begin above both pools' initial IDs. The configured seed initializes the
+ * processing pool; streaming uses seed+1 and shared traffic uses seed+2.
+ *
+ * Set bonus_mode=false to run the original single-pool simulation.
+ */

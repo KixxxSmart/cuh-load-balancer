@@ -1,0 +1,183 @@
+/** @enum cuh::LogMode
+ * @brief Select events or summaries only.
+ */
+
+/** @struct cuh::Config
+ * @brief Settings read from a key=value file.
+ */
+
+/** @fn Config cuh::Config::load(const std::string& path)
+ * @brief Load settings; throws for unreadable or invalid input.
+ */
+
+/** @fn void cuh::Config::validate() const
+ * @brief Reject invalid ranges and settings.
+ */
+
+/** @fn std::uint64_t cuh::parseUnsigned(const std::string& text, const std::string& name)
+ * @brief Parse an unsigned decimal integer or throw.
+ */
+
+/** @struct cuh::IpRange
+ * @brief Inclusive blocked address range.
+ */
+
+/** @fn IpRange cuh::parseIpRange(const std::string& text)
+ * @brief Parse first.address-last.address; reject reversed ranges.
+ */
+
+/** @class cuh::Firewall
+ * @brief Checks source addresses against blocked ranges.
+ */
+
+/** @fn cuh::Firewall::Firewall(std::vector<IpRange> ranges)
+ * @brief Store the validated rules.
+ */
+
+/** @fn bool cuh::Firewall::isBlocked(IPv4 address) const
+ * @brief Return whether an address matches any rule.
+ */
+
+/** @class cuh::LoadBalancer
+ * @brief Owns the request queue, simulation clock, and dynamic server pool.
+ */
+
+/** @fn cuh::LoadBalancer::LoadBalancer(Config config, Logger& logger, char jobType)
+ * @brief Use the supplied settings, logger, and optional dedicated job type.
+ */
+
+/** @fn void cuh::LoadBalancer::initialize(std::size_t initialServers)
+ * @brief Create servers and seed 100 accepted requests per server.
+ */
+
+/** @fn void cuh::LoadBalancer::step()
+ * @brief Generate local traffic and advance one cycle in single-pool mode.
+ */
+
+/** @fn SimulationStats cuh::LoadBalancer::snapshot() const
+ * @brief Return current counters and server status.
+ */
+
+/** @fn void cuh::LoadBalancer::writeStartingSummary()
+ * @brief Write the starting summary.
+ */
+
+/** @fn void cuh::LoadBalancer::writeEndingSummary()
+ * @brief Write the ending summary.
+ */
+
+/** @class cuh::Logger
+ * @brief Writes summaries and optional events; log files never contain color codes.
+ */
+
+/** @fn cuh::Logger::Logger(const Config& config, std::ostream& console)
+ * @brief Open the log file and select the output mode.
+ */
+
+/** @fn void cuh::Logger::event(std::uint64_t cycle, const std::string& type, const std::string& message)
+ * @brief Write a changing event in verbose mode.
+ */
+
+/** @fn void cuh::Logger::summary(const std::string& label, const SimulationStats& stats, const Config& config, bool includePeak)
+ * @brief Write a summary in either mode.
+ */
+
+/** @namespace cuh
+ * @brief Simulation components.
+ */
+
+/** @struct cuh::Request
+ * @brief One simulated web request.
+ */
+
+/** @fn IPv4 cuh::parseIPv4(const std::string& text)
+ * @brief Parse four decimal octets; throws for invalid input.
+ */
+
+/** @fn std::string cuh::ipv4ToString(IPv4 address)
+ * @brief Format a numeric address as dotted decimal.
+ */
+
+/** @struct cuh::SimulationStats
+ * @brief Work totals and server counts used in the log summary.
+ */
+
+/** @fn bool cuh::SimulationStats::accountingConsistent() const
+ * @brief Check that every generated and accepted request is accounted for.
+ */
+
+/** @class cuh::WebServer
+ * @brief Processes one request at a time; finishes work before retirement.
+ */
+
+/** @fn cuh::WebServer::WebServer(std::uint64_t id)
+ * @brief Create a server with a log identifier.
+ */
+
+/** @fn void cuh::WebServer::assign(const Request& request)
+ * @brief Accept work if idle and not retiring.
+ */
+
+/** @fn std::optional<Request> cuh::WebServer::advance()
+ * @brief Consume one cycle and return a request only when it completes.
+ */
+
+/** @fn void cuh::WebServer::retire()
+ * @brief Stop taking new work.
+ */
+
+/** @fn bool cuh::WebServer::busy() const
+ * @brief Return whether a request is in progress.
+ */
+
+/** @fn bool cuh::WebServer::retiring() const
+ * @brief Return whether the server is leaving the pool.
+ */
+
+/** @fn std::uint64_t cuh::WebServer::id() const
+ * @brief Return the server's identifier.
+ */
+
+/** @fn Request cuh::generateRequest(std::mt19937& random, std::uint64_t id, int minimumCycles, int maximumCycles)
+ * @brief Generate request data using a supplied random engine and service range.
+ */
+
+/** @fn void cuh::LoadBalancer::step(const std::vector<Request>& arrivals)
+ * @brief Advance one cycle with externally routed requests; dedicated pools reject the wrong type.
+ */
+
+/** @class cuh::Switch
+ * @brief Routes processing and streaming traffic to independently managed server pools.
+ */
+
+/** @fn cuh::Switch::Switch(const Config& config, Logger& logger)
+ * @brief Create processing and streaming load balancers sharing one output log.
+ */
+
+/** @fn void cuh::Switch::initialize(std::size_t initialServers)
+ * @brief Split total starting capacity between the pools and seed their queues.
+ */
+
+/** @fn void cuh::Switch::step()
+ * @brief Route a shared batch and advance both balancers once on the same clock.
+ */
+
+/** @fn SimulationStats cuh::Switch::snapshot() const
+ * @brief Return combined counters and status; individual queue peaks are reported per pool.
+ */
+
+/** @fn SimulationStats cuh::Switch::processingStats() const
+ * @brief Return the processing pool's counters and status.
+ */
+
+/** @fn SimulationStats cuh::Switch::streamingStats() const
+ * @brief Return the streaming pool's counters and status.
+ */
+
+/** @fn void cuh::Switch::writeStartingSummary()
+ * @brief Write both pool summaries and the combined starting summary.
+ */
+
+/** @fn void cuh::Switch::writeEndingSummary()
+ * @brief Write both pool summaries and the combined ending summary.
+ */
